@@ -1,0 +1,58 @@
+# Checkout business rules — baseline used before the free-shipping change.
+name: checkout-rules
+version: "1.0.0"
+description: Baseline checkout rules for the storefront.
+
+rules:
+  - id: checkout.min-order
+    version: 1
+    statement: Orders must be at least $10 before tax to checkout.
+    when:
+      - field: cart.subtotal
+        op: lt
+        value: 10
+    then:
+      - field: cart.checkout_allowed
+        op: is_false
+    entities:
+      - cart
+      - order
+    affected_services:
+      - checkout-api
+      - storefront-web
+
+  - id: checkout.free-shipping
+    version: 1
+    statement: Free shipping is not offered.
+    when:
+      - field: cart.subtotal
+        op: ge
+        value: 0
+    then:
+      - field: cart.shipping_price
+        op: eq
+        value: 5.99
+    entities:
+      - cart
+      - shipping
+    affected_services:
+      - checkout-api
+      - shipping-service
+
+  - id: inventory.hold-stock
+    version: 1
+    statement: Reserve stock for 15 minutes when checkout starts.
+    when:
+      - field: checkout.status
+        op: eq
+        value: started
+    then:
+      - field: inventory.hold_minutes
+        op: eq
+        value: 15
+    entities:
+      - inventory
+      - checkout
+    affected_services:
+      - inventory-service
+      - checkout-api

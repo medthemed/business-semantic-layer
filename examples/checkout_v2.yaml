@@ -1,0 +1,78 @@
+# Checkout business rules — free shipping over $50, min order raised, hold shortened.
+name: checkout-rules
+version: "1.1.0"
+description: Adds free shipping over $50 and tightens the stock hold.
+
+rules:
+  - id: checkout.min-order
+    version: 2
+    statement: Orders must be at least $25 before tax to checkout.
+    when:
+      - field: cart.subtotal
+        op: lt
+        value: 25
+    then:
+      - field: cart.checkout_allowed
+        op: is_false
+    entities:
+      - cart
+      - order
+    affected_services:
+      - checkout-api
+      - storefront-web
+
+  - id: checkout.free-shipping
+    version: 2
+    statement: Orders of $50 or more ship free.
+    when:
+      - field: cart.subtotal
+        op: ge
+        value: 50
+    then:
+      - field: cart.shipping_price
+        op: eq
+        value: 0
+    entities:
+      - cart
+      - shipping
+    affected_services:
+      - checkout-api
+      - shipping-service
+      - storefront-web
+
+  - id: inventory.hold-stock
+    version: 1
+    statement: Reserve stock for 15 minutes when checkout starts.
+    when:
+      - field: checkout.status
+        op: eq
+        value: started
+    then:
+      - field: inventory.hold_minutes
+        op: eq
+        value: 15
+    entities:
+      - inventory
+      - checkout
+    affected_services:
+      - inventory-service
+      - checkout-api
+
+  - id: checkout.coupon-stack
+    version: 1
+    statement: Coupons cannot be stacked with free shipping.
+    when:
+      - field: cart.shipping_price
+        op: eq
+        value: 0
+      - field: cart.coupon_code
+        op: exists
+    then:
+      - field: cart.coupon_allowed
+        op: is_false
+    entities:
+      - cart
+      - coupon
+    affected_services:
+      - checkout-api
+      - promo-service

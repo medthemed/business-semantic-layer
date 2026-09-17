@@ -1,0 +1,23 @@
+# Intentionally invalid: missing statement, bad op, duplicate id, bad version.
+name: broken-rules
+version: "0.0.1"
+rules:
+  - id: checkout.min-order
+    version: 0
+    when:
+      - field: cart.subtotal
+        op: between
+        value: 10
+    then: []
+    entities:
+      - cart
+    affected_services:
+      - checkout-api
+
+  - id: checkout.min-order
+    version: 1
+    statement: duplicate id on purpose
+    when: []
+    then: []
+    entities: []
+    affected_services: []
