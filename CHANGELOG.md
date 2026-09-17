@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-05
+
+### Added
+- Batch validation: `bsl validate` accepts multiple paths and directories of
+  `*.yaml` / `*.yml` / `*.json`. Directories expand to immediate children (sorted).
+- Aggregate pass/fail table for multi-file validation.
+- Directory impact: `bsl impact OLD_DIR NEW_DIR` pairs files by name and prints
+  a multi-service impact rollup (service → files that touch it).
+- New public exports: `discover_rule_files`, `expand_rule_paths`, `validate_many`,
+  `impact_rollup`, `BatchValidateResult`, `ImpactRollup`, `FileOutcome`, `FileImpact`.
+
+### Changed
+- Single-file `bsl validate` / `bsl impact` output is unchanged.
+- Directory impact exit codes: `0` clean (unless `--fail-on-impact`), `1` gated
+  impact or partial file errors, `2` nothing usable was compared.
+
 ## [0.3.0] - 2026-10-19
 
 ### Added
