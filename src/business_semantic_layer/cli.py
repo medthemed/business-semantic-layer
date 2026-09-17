@@ -8,6 +8,9 @@ bsl validate RULES.yaml
 bsl impact OLD.yaml NEW.yaml [--format text|markdown] [-o OUT]
     Diff two rule sets; print changed rules and services to refactor.
 
+bsl diff OLD.yaml NEW.yaml [--show-unchanged] [-o OUT]
+    Human-readable field-level rule diff for PR review.
+
 bsl export RULES.yaml --lang python|typescript|markdown [-o OUT]
     Emit rule constants or (with impact) a markdown report stub.
 """
@@ -26,6 +29,7 @@ from .export import (
     export_typescript_constants,
 )
 from .impact import analyze_impact
+from .rule_diff import format_rule_set_diff
 from .schema import SchemaError, validate_raw
 
 
@@ -93,6 +97,36 @@ def cmd_impact(args: argparse.Namespace) -> int:
 
     # Exit 1 when there is real impact so CI can gate on rule drift.
     return 1 if impact.has_impact() and args.fail_on_impact else 0
+
+
+def cmd_diff(args: argparse.Namespace) -> int:
+    try:
+        old = _load_validated(args.old)
+        new = _load_validated(args.new)
+    except SchemaError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    except Exception as exc:  # noqa: BLE001
+        print(f"error: failed to load rule sets: {exc}", file=sys.stderr)
+        return 2
+
+    impact = analyze_impact(old, new)
+    output = format_rule_set_diff(
+        old,
+        new,
+        impact=impact,
+        show_unchanged=args.show_unchanged,
+    )
+
+    if args.output:
+        Path(args.output).write_text(output, encoding="utf-8")
+        print(f"wrote {args.output}")
+    else:
+        print(output, end="" if output.endswith("\n") else "\n")
+    return 0
 
 
 def cmd_export(args: argparse.Namespace) -> int:
@@ -170,6 +204,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="exit 1 when any rule was added, removed, or changed",
     )
     p_imp.set_defaults(func=cmd_impact)
+
+    p_diff = sub.add_parser(
+        "diff",
+        help="human-readable field-level rule diff (for PR review)",
+    )
+    p_diff.add_argument("old", help="previous rules document")
+    p_diff.add_argument("new", help="current rules document")
+    p_diff.add_argument(
+        "--show-unchanged",
+        action="store_true",
+        help="also list rules that did not change",
+    )
+    p_diff.add_argument("-o", "--output", help="write diff to this file")
+    p_diff.set_defaults(func=cmd_diff)
 
     p_exp = sub.add_parser("export", help="export rule constants or a report")
     p_exp.add_argument("rules", help="path to rules YAML/JSON")

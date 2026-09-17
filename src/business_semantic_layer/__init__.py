@@ -9,13 +9,15 @@ Modules
 dsl      -- Rule / RuleSet dataclasses and a tiny YAML subset parser.
 schema   -- Structural validation with path-qualified errors.
 impact   -- Diff two rule sets; list changed rules and affected services.
+rule_diff-- Human-readable field-level rule diffs for PR review.
 export   -- Markdown impact report + Python/TypeScript constant stubs.
-cli      -- `bsl validate | impact | export`.
+cli      -- `bsl validate | impact | diff | export`.
 """
 
 from .dsl import Rule, RuleSet, Condition, parse_document, dump_document
 from .schema import SchemaError, validate_ruleset
 from .impact import ChangeKind, ImpactResult, RuleChange, analyze_impact
+from .rule_diff import FieldDelta, diff_rule, format_rule_set_diff
 from .export import (
     export_markdown_report,
     export_python_constants,
@@ -30,10 +32,13 @@ __all__ = [
     "ChangeKind",
     "ImpactResult",
     "RuleChange",
+    "FieldDelta",
     "parse_document",
     "dump_document",
     "validate_ruleset",
     "analyze_impact",
+    "diff_rule",
+    "format_rule_set_diff",
     "export_markdown_report",
     "export_python_constants",
     "export_typescript_constants",
