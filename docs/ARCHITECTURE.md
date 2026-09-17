@@ -43,8 +43,9 @@ RuleSet.from_dict   ──►  RuleSet
 | `dsl.py` | `Condition`, `Rule`, `RuleSet` dataclasses. Tiny YAML-subset parser and JSON loader. YAML/JSON dumpers. |
 | `schema.py` | Path-qualified structural validation (`rules[2].when[0].op: …`). Duplicate-id detection. |
 | `impact.py` | Diff two rule sets (`ChangeKind`), compute affected services/entities, build a rule graph. |
+| `rule_diff.py` | Human-readable field-level diffs for PR review (`bsl diff`). |
 | `export.py` | Markdown impact report; Python and TypeScript constant modules. |
-| `cli.py` | `bsl validate` / `bsl impact` / `bsl export`. Exit codes suitable for CI. |
+| `cli.py` | `bsl validate` / `bsl impact` / `bsl diff` / `bsl export`. Exit codes suitable for CI. |
 
 ## Rule model
 
