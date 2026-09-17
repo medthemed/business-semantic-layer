@@ -20,7 +20,11 @@ The freeze is enforced by `tests/test_public_api.py`.
 | --- | --- |
 | `parse_document(text, fmt=None)` | Parse JSON or the YAML subset. |
 | `validate_ruleset(ruleset)` | Returns a `SchemaError` (possibly empty). |
+| `validate_many(paths, *, expand=True)` | Returns `BatchValidateResult` over many files. |
+| `discover_rule_files(directory)` | Sorted `*.yaml` / `*.yml` / `*.json` children. |
+| `expand_rule_paths(paths)` | Directories → rule files. |
 | `analyze_impact(old, new)` | Returns `ImpactResult`. |
+| `impact_rollup(old_paths, new_paths)` | Returns `ImpactRollup` with multi-service rollup. |
 | `diff_rule` / `format_rule_set_diff` | Human-readable field-level diffs. |
 | `export_markdown_report` | Markdown impact report. |
 | `export_python_constants` / `export_typescript_constants` | Codegen stubs. |

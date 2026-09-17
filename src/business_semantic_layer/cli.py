@@ -5,12 +5,16 @@ Subcommands
 bsl init [DIR] [--force]
     Scaffold a starter ``rules.yaml`` and ``.bsl.yaml`` project config.
 
-bsl validate RULES.yaml
-    Parse + schema-validate a rule document. Exit 0 on success, 1 on errors.
+bsl validate RULES.yaml [RULES.yaml ...]
+    Parse + schema-validate one or more rule documents. Directories expand
+    to contained ``*.yaml`` / ``*.yml`` / ``*.json`` files. Multiple paths
+    print an aggregate pass/fail table. Exit 0 on success, 1 on errors.
 
 bsl impact OLD.yaml NEW.yaml [--format text|markdown] [-o OUT]
     Diff two rule sets; print changed rules and services to refactor.
-    ``-o`` falls back to the project config ``output_path`` when omitted.
+    When OLD and NEW are directories, files pair by name and a multi-service
+    impact rollup is printed. ``-o`` falls back to the project config
+    ``output_path`` when omitted.
 
 bsl diff OLD.yaml NEW.yaml [--show-unchanged] [-o OUT]
     Human-readable field-level rule diff for PR review.
@@ -26,6 +30,7 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
+from .batch import impact_rollup, validate_many
 from .config import discover_config
 from .dsl import RuleSet, dump_document, load_ruleset_document, parse_document
 from .errors import DslError, ImpactError
@@ -51,6 +56,10 @@ def _load_validated(path: str | Path) -> RuleSet:
     if not errors.ok:
         raise errors
     return RuleSet.from_dict(data)
+
+
+def _is_directory(path: str | Path) -> bool:
+    return Path(path).is_dir()
 
 
 def _resolve_output(args: argparse.Namespace) -> str | None:
@@ -79,29 +88,62 @@ def _write_output(path_str: str, content: str, *, default_name: str) -> None:
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
-    try:
-        text = _read_text(args.rules)
-    except OSError as exc:
-        print(f"error: cannot read {args.rules}: {exc}", file=sys.stderr)
+    paths: list[str] = list(args.rules)
+    multi = len(paths) > 1 or any(_is_directory(p) for p in paths)
+
+    if not multi:
+        try:
+            text = _read_text(paths[0])
+        except OSError as exc:
+            print(f"error: cannot read {paths[0]}: {exc}", file=sys.stderr)
+            return 2
+        try:
+            data = parse_document(text)
+        except DslError as exc:
+            print(f"error: failed to parse {paths[0]}: {exc}", file=sys.stderr)
+            return 1
+        errors = validate_raw(data)
+        if not errors.ok:
+            print(str(errors), file=sys.stderr)
+            return 1
+        ruleset = RuleSet.from_dict(data)
+        print(
+            f"OK: {ruleset.name} v{ruleset.version} — "
+            f"{len(ruleset.rules)} rule(s) valid"
+        )
+        return 0
+
+    batch = validate_many(paths)
+    if not batch.outcomes:
+        print("error: no rule files found", file=sys.stderr)
         return 2
-    try:
-        data = parse_document(text)
-    except DslError as exc:
-        print(f"error: failed to parse {args.rules}: {exc}", file=sys.stderr)
-        return 1
-    errors = validate_raw(data)
-    if not errors.ok:
-        print(str(errors), file=sys.stderr)
-        return 1
-    ruleset = RuleSet.from_dict(data)
-    print(
-        f"OK: {ruleset.name} v{ruleset.version} — "
-        f"{len(ruleset.rules)} rule(s) valid"
-    )
-    return 0
+    print(batch.format_table(), end="")
+    return 0 if batch.ok else 1
 
 
 def cmd_impact(args: argparse.Namespace) -> int:
+    batch_mode = _is_directory(args.old) or _is_directory(args.new)
+
+    if batch_mode:
+        rollup = impact_rollup([args.old], [args.new])
+        if not rollup.pairs:
+            print("error: no rule files found to compare", file=sys.stderr)
+            return 2
+        output = rollup.format_summary()
+        target = _resolve_output(args)
+        if target:
+            _write_output(target, output, default_name="impact-rollup.txt")
+        else:
+            print(output, end="" if output.endswith("\n") else "\n")
+        if rollup.errors and not rollup.with_impact and not any(
+            p.impact is not None for p in rollup.pairs
+        ):
+            return 2
+        if rollup.errors and not rollup.ok:
+            # Some files failed to load; still emit the rollup for the rest.
+            return 2 if not any(p.impact is not None for p in rollup.pairs) else 1
+        return 1 if rollup.has_impact() and args.fail_on_impact else 0
+
     try:
         old = _load_validated(args.old)
         new = _load_validated(args.new)
@@ -258,13 +300,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_init.set_defaults(func=cmd_init)
 
-    p_val = sub.add_parser("validate", help="validate a rule document")
-    p_val.add_argument("rules", help="path to rules YAML/JSON")
+    p_val = sub.add_parser(
+        "validate",
+        help="validate one or more rule documents",
+    )
+    p_val.add_argument(
+        "rules",
+        nargs="+",
+        help="path(s) to rules YAML/JSON; directories expand to rule files",
+    )
     p_val.set_defaults(func=cmd_validate)
 
-    p_imp = sub.add_parser("impact", help="diff two rule sets")
-    p_imp.add_argument("old", help="previous rules document")
-    p_imp.add_argument("new", help="current rules document")
+    p_imp = sub.add_parser(
+        "impact",
+        help="diff two rule sets (files or directories paired by name)",
+    )
+    p_imp.add_argument("old", help="previous rules document or directory")
+    p_imp.add_argument("new", help="current rules document or directory")
     p_imp.add_argument(
         "--format",
         choices=("text", "markdown"),
