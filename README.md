@@ -72,7 +72,9 @@ bsl impact old.yaml new.yaml --fail-on-impact
 ```
 
 See [docs/PM_TO_REFACTOR.md](docs/PM_TO_REFACTOR.md) for an end-to-end
-walkthrough from a PM request to a refactor checklist.
+walkthrough from a PM request to a refactor checklist, and
+[docs/PUBLIC_API.md](docs/PUBLIC_API.md) for the 0.x compatibility promise
+and typed exceptions.
 
 ## Rule schema
 
