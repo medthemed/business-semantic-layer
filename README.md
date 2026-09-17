@@ -26,6 +26,18 @@ package keeps the rule itself as data:
 When you change the file, `bsl impact` tells you **which rules changed** and
 **which services to refactor** — before the PR review starts.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    A[Requirements / Rules YAML] --> B[DSL Parser]
+    B --> C[Schema Validation]
+    C --> D[Rule Graph]
+    D --> E[Impact Diff]
+    E --> F[Services to refactor]
+    D --> G[Export constants PY/TS]
+```
+
 ## Install
 
 ```bash
