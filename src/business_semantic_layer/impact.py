@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Iterable
+from typing import Any, Iterable
 
 from .dsl import Rule, RuleSet
 from .errors import ImpactError
@@ -116,6 +116,40 @@ class ImpactResult:
 
     def has_impact(self) -> bool:
         return any(c.requires_refactor for c in self.changes)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Machine-readable impact report (schema: ``impact-report``)."""
+        return {
+            "old_name": self.old_name,
+            "new_name": self.new_name,
+            "ok": True,
+            "has_impact": self.has_impact(),
+            "counts": {
+                "added": len(self.added),
+                "removed": len(self.removed),
+                "changed": len(self.changed),
+                "unchanged": len(self.unchanged),
+            },
+            "changes": [
+                {
+                    "rule_id": c.rule_id,
+                    "kind": c.kind.value,
+                    "requires_refactor": c.requires_refactor,
+                    "fields_changed": list(c.fields_changed),
+                    "old": c.old.to_dict() if c.old is not None else None,
+                    "new": c.new.to_dict() if c.new is not None else None,
+                }
+                for c in self.changes
+            ],
+            "services": self.affected_services(),
+            "entities": self.affected_entities(),
+            "changed_ids": self.changed_ids,
+        }
+
+    def to_json(self, *, indent: int = 2) -> str:
+        import json
+
+        return json.dumps(self.to_dict(), indent=indent, sort_keys=False) + "\n"
 
     def format_summary(self) -> str:
         lines = [

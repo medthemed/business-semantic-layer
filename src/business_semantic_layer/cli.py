@@ -10,11 +10,12 @@ bsl validate RULES.yaml [RULES.yaml ...]
     to contained ``*.yaml`` / ``*.yml`` / ``*.json`` files. Multiple paths
     print an aggregate pass/fail table. Exit 0 on success, 1 on errors.
 
-bsl impact OLD.yaml NEW.yaml [--format text|markdown] [-o OUT]
+bsl impact OLD.yaml NEW.yaml [--format text|markdown|json] [-o OUT]
     Diff two rule sets; print changed rules and services to refactor.
     When OLD and NEW are directories, files pair by name and a multi-service
-    impact rollup is printed. ``-o`` falls back to the project config
-    ``output_path`` when omitted.
+    impact rollup is printed. ``--format json`` matches
+    ``schemas/impact-report.schema.json``. ``-o`` falls back to the project
+    config ``output_path`` when omitted.
 
 bsl diff OLD.yaml NEW.yaml [--show-unchanged] [-o OUT]
     Human-readable field-level rule diff for PR review.
@@ -129,10 +130,14 @@ def cmd_impact(args: argparse.Namespace) -> int:
         if not rollup.pairs:
             print("error: no rule files found to compare", file=sys.stderr)
             return 2
-        output = rollup.format_summary()
+        if args.format == "json":
+            output = rollup.to_json()
+        else:
+            output = rollup.format_summary()
         target = _resolve_output(args)
         if target:
-            _write_output(target, output, default_name="impact-rollup.txt")
+            default = "impact-rollup.json" if args.format == "json" else "impact-rollup.txt"
+            _write_output(target, output, default_name=default)
         else:
             print(output, end="" if output.endswith("\n") else "\n")
         if rollup.errors and not rollup.with_impact and not any(
@@ -162,12 +167,18 @@ def cmd_impact(args: argparse.Namespace) -> int:
 
     if args.format == "markdown":
         output = export_markdown_report(impact, old=old, new=new)
+    elif args.format == "json":
+        output = impact.to_json()
     else:
         output = impact.format_summary() + "\n"
 
     target = _resolve_output(args)
     if target:
-        _write_output(target, output, default_name="impact.md")
+        default = {
+            "markdown": "impact.md",
+            "json": "impact.json",
+        }.get(args.format, "impact.txt")
+        _write_output(target, output, default_name=default)
     else:
         print(output, end="" if output.endswith("\n") else "\n")
 
@@ -319,9 +330,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_imp.add_argument("new", help="current rules document or directory")
     p_imp.add_argument(
         "--format",
-        choices=("text", "markdown"),
+        choices=("text", "markdown", "json"),
         default="text",
-        help="output format (default: text)",
+        help=(
+            "output format (default: text; json matches schemas/impact-report.schema.json)"
+        ),
     )
     p_imp.add_argument("-o", "--output", help="write report to this file")
     p_imp.add_argument(

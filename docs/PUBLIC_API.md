@@ -28,6 +28,8 @@ The freeze is enforced by `tests/test_public_api.py`.
 | `diff_rule` / `format_rule_set_diff` | Human-readable field-level diffs. |
 | `export_markdown_report` | Markdown impact report. |
 | `export_python_constants` / `export_typescript_constants` | Codegen stubs. |
+| `load_schema` / `schema_path` | Published JSON Schema files (`rules-document`, `impact-report`, `impact-rollup`). |
+| `ImpactResult.to_dict()` / `to_json()` | Machine-readable impact report. |
 
 ## Typed exceptions
 

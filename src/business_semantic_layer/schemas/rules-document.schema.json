@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://medthemed.github.io/business-semantic-layer/schemas/rules-document.schema.json",
+  "title": "bsl rules document",
+  "description": "Versioned business-rule document parsed by bsl validate / impact / export.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["name", "version", "rules"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string" },
+    "description": { "type": "string" },
+    "rules": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/rule" }
+    }
+  },
+  "$defs": {
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "op"],
+      "properties": {
+        "field": { "type": "string", "minLength": 1 },
+        "op": {
+          "type": "string",
+          "enum": [
+            "eq",
+            "ne",
+            "lt",
+            "le",
+            "gt",
+            "ge",
+            "in",
+            "not_in",
+            "contains",
+            "exists",
+            "not_exists",
+            "is_true",
+            "is_false"
+          ]
+        },
+        "value": {}
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "version", "statement"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "integer", "minimum": 1 },
+        "statement": { "type": "string", "minLength": 1 },
+        "when": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/condition" }
+        },
+        "then": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/condition" }
+        },
+        "entities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "affected_services": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "enabled": { "type": "boolean" },
+        "metadata": { "type": "object" }
+      }
+    }
+  }
+}

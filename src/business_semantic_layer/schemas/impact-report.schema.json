@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://medthemed.github.io/business-semantic-layer/schemas/impact-report.schema.json",
+  "title": "bsl impact report",
+  "description": "Machine-readable change-impact report (bsl impact --format json).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "old_name",
+    "new_name",
+    "ok",
+    "has_impact",
+    "counts",
+    "changes",
+    "services",
+    "entities",
+    "changed_ids"
+  ],
+  "properties": {
+    "old_name": { "type": "string" },
+    "new_name": { "type": "string" },
+    "ok": {
+      "type": "boolean",
+      "description": "True when impact analysis completed."
+    },
+    "has_impact": {
+      "type": "boolean",
+      "description": "True when any rule was added, removed, or changed."
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["added", "removed", "changed", "unchanged"],
+      "properties": {
+        "added": { "type": "integer", "minimum": 0 },
+        "removed": { "type": "integer", "minimum": 0 },
+        "changed": { "type": "integer", "minimum": 0 },
+        "unchanged": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "changes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ruleChange" }
+    },
+    "services": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Union of affected_services on added/removed/changed rules."
+    },
+    "entities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "changed_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Rule ids that require refactor."
+    }
+  },
+  "$defs": {
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "op"],
+      "properties": {
+        "field": { "type": "string" },
+        "op": { "type": "string" },
+        "value": {}
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "version", "statement"],
+      "properties": {
+        "id": { "type": "string" },
+        "version": { "type": "integer" },
+        "statement": { "type": "string" },
+        "when": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
+        "then": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
+        "entities": { "type": "array", "items": { "type": "string" } },
+        "affected_services": { "type": "array", "items": { "type": "string" } },
+        "enabled": { "type": "boolean" },
+        "metadata": { "type": "object" }
+      }
+    },
+    "ruleChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_id", "kind", "requires_refactor", "fields_changed", "old", "new"],
+      "properties": {
+        "rule_id": { "type": "string" },
+        "kind": {
+          "type": "string",
+          "enum": ["added", "removed", "changed", "unchanged"]
+        },
+        "requires_refactor": { "type": "boolean" },
+        "fields_changed": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "old": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/rule" }
+          ]
+        },
+        "new": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/rule" }
+          ]
+        }
+      }
+    }
+  }
+}

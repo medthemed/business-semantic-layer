@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://medthemed.github.io/business-semantic-layer/schemas/impact-rollup.schema.json",
+  "title": "bsl impact rollup",
+  "description": "Multi-file impact aggregate from bsl impact OLD_DIR NEW_DIR --format json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ok",
+    "has_impact",
+    "pair_count",
+    "pairs_with_impact",
+    "services",
+    "service_rollup",
+    "results"
+  ],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "has_impact": { "type": "boolean" },
+    "pair_count": { "type": "integer", "minimum": 0 },
+    "pairs_with_impact": { "type": "integer", "minimum": 0 },
+    "services": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "service_rollup": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/fileImpact" }
+    }
+  },
+  "$defs": {
+    "fileImpact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["old_path", "new_path", "ok"],
+      "properties": {
+        "old_path": { "type": "string" },
+        "new_path": { "type": "string" },
+        "ok": { "type": "boolean" },
+        "error": { "type": "string" },
+        "impact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "old_name",
+            "new_name",
+            "added",
+            "removed",
+            "changed",
+            "unchanged",
+            "services",
+            "entities",
+            "has_impact"
+          ],
+          "properties": {
+            "old_name": { "type": "string" },
+            "new_name": { "type": "string" },
+            "added": { "type": "array", "items": { "type": "string" } },
+            "removed": { "type": "array", "items": { "type": "string" } },
+            "changed": { "type": "array", "items": { "type": "string" } },
+            "unchanged": { "type": "array", "items": { "type": "string" } },
+            "services": { "type": "array", "items": { "type": "string" } },
+            "entities": { "type": "array", "items": { "type": "string" } },
+            "has_impact": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}
