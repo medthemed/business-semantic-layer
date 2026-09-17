@@ -56,6 +56,9 @@ bsl validate examples/checkout_v1.yaml
 # Diff two rule sets: changed rules + services to refactor
 bsl impact examples/checkout_v1.yaml examples/checkout_v2.yaml
 
+# Field-level rule diff for PR review
+bsl diff examples/checkout_v1.yaml examples/checkout_v2.yaml
+
 # Same, as a Markdown report for the PR description
 bsl impact examples/checkout_v1.yaml examples/checkout_v2.yaml \
     --format markdown -o impact.md
@@ -67,6 +70,9 @@ bsl export examples/checkout_v1.yaml --lang typescript
 # CI gate: non-zero exit when any rule drifted
 bsl impact old.yaml new.yaml --fail-on-impact
 ```
+
+See [docs/PM_TO_REFACTOR.md](docs/PM_TO_REFACTOR.md) for an end-to-end
+walkthrough from a PM request to a refactor checklist.
 
 ## Rule schema
 
@@ -100,6 +106,17 @@ Given old and new rule sets:
 - **unchanged** — identical content and version
 - **services to refactor** — union of `affected_services` on every added,
   removed, or changed rule
+
+## What `bsl diff` reports
+
+A field-level human-readable diff for PR review:
+
+- rule-set name/version header
+- `+ added` / `- removed` / `~ changed` blocks
+- statement and when/then condition deltas as `-` / `+` lines
+- services-to-refactor list
+
+Use `--show-unchanged` to also list rules that did not move.
 
 ## Library use
 
