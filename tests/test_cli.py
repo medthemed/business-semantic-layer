@@ -64,6 +64,38 @@ def test_impact_markdown_to_file(tmp_path, capsys):
     assert "Services to refactor" in text
 
 
+def test_diff_text(capsys):
+    code = main(["diff", V1, V2])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "RuleSet checkout-rules: 1.0.0 -> 1.1.0" in out
+    assert "+ checkout.coupon-stack" in out
+    assert "~ checkout.free-shipping" in out
+    assert "Services to refactor" in out
+
+
+def test_diff_show_unchanged(capsys):
+    code = main(["diff", V1, V2, "--show-unchanged"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "inventory.hold-stock (unchanged)" in out
+
+
+def test_diff_identical(capsys):
+    code = main(["diff", V1, V1])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "No rule changes." in out
+
+
+def test_diff_to_file(tmp_path):
+    out_file = tmp_path / "diff.txt"
+    code = main(["diff", V1, V2, "-o", str(out_file)])
+    assert code == 0
+    text = out_file.read_text(encoding="utf-8")
+    assert "checkout.coupon-stack" in text
+
+
 def test_export_python(capsys):
     code = main(["export", V1, "--lang", "python"])
     out = capsys.readouterr().out
