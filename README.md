@@ -50,6 +50,10 @@ YAML-subset parser). Tests use `pytest`.
 ## CLI
 
 ```bash
+# Scaffold a new project (writes rules.yaml and .bsl.yaml)
+bsl init my-rules && cd my-rules
+bsl validate rules.yaml
+
 # Schema-validate a rule document
 bsl validate examples/checkout_v1.yaml
 
@@ -70,6 +74,22 @@ bsl export examples/checkout_v1.yaml --lang typescript
 # CI gate: non-zero exit when any rule drifted
 bsl impact old.yaml new.yaml --fail-on-impact
 ```
+
+### Project config
+
+Drop a `.bsl.yaml` (or `.bsl.json`) next to your rules to set defaults:
+
+```yaml
+default_services:
+  - checkout-api
+  - storefront-web
+output_path: reports
+```
+
+Lookup order: explicit CLI flag > `.bsl.yaml` > `.bsl.json` > built-in
+defaults (no default services, output to stdout). When `output_path` is
+set, `bsl impact` / `bsl diff` / `bsl export` write there instead of
+stdout (the flag `-o` still wins).
 
 See [docs/PM_TO_REFACTOR.md](docs/PM_TO_REFACTOR.md) for an end-to-end
 walkthrough from a PM request to a refactor checklist, and
