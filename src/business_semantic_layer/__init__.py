@@ -37,6 +37,14 @@ from .batch import (
 )
 from .config import ProjectConfig, discover_config, load_config
 from .init import write_starter
+from .schemas import (
+    IMPACT_REPORT,
+    IMPACT_ROLLUP,
+    KNOWN_SCHEMAS,
+    RULES_DOCUMENT,
+    load_schema,
+    schema_path,
+)
 from .export import (
     export_markdown_report,
     export_python_constants,
@@ -59,6 +67,10 @@ __all__ = [
     "FileImpact",
     "FileOutcome",
     "ImpactRollup",
+    "IMPACT_REPORT",
+    "IMPACT_ROLLUP",
+    "KNOWN_SCHEMAS",
+    "RULES_DOCUMENT",
     "parse_document",
     "dump_document",
     "validate_ruleset",
@@ -71,6 +83,8 @@ __all__ = [
     "format_rule_set_diff",
     "discover_config",
     "load_config",
+    "load_schema",
+    "schema_path",
     "write_starter",
     "export_markdown_report",
     "export_python_constants",

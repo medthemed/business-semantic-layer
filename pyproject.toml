@@ -30,6 +30,9 @@ bsl = "business_semantic_layer.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+business_semantic_layer = ["schemas/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]

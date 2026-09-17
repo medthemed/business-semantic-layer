@@ -74,6 +74,9 @@ bsl diff examples/checkout_v1.yaml examples/checkout_v2.yaml
 bsl impact examples/checkout_v1.yaml examples/checkout_v2.yaml \
     --format markdown -o impact.md
 
+# Machine-readable impact for CI / dashboards
+bsl impact examples/checkout_v1.yaml examples/checkout_v2.yaml --format json
+
 # Emit importable constants
 bsl export examples/checkout_v1.yaml --lang python
 bsl export examples/checkout_v1.yaml --lang typescript
@@ -99,9 +102,10 @@ set, `bsl impact` / `bsl diff` / `bsl export` write there instead of
 stdout (the flag `-o` still wins).
 
 See [docs/PM_TO_REFACTOR.md](docs/PM_TO_REFACTOR.md) for an end-to-end
-walkthrough from a PM request to a refactor checklist, and
-[docs/PUBLIC_API.md](docs/PUBLIC_API.md) for the 0.x compatibility promise
-and typed exceptions.
+walkthrough from a PM request to a refactor checklist,
+[docs/JSON_SCHEMA.md](docs/JSON_SCHEMA.md) for the published JSON Schema
+contracts, and [docs/PUBLIC_API.md](docs/PUBLIC_API.md) for the 0.x
+compatibility promise and typed exceptions.
 
 ## Rule schema
 
