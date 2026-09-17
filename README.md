@@ -57,8 +57,15 @@ bsl validate rules.yaml
 # Schema-validate a rule document
 bsl validate examples/checkout_v1.yaml
 
+# Batch: validate a directory (or several paths) and print a pass/fail table
+bsl validate examples/
+bsl validate rules/checkout.yaml rules/shipping.yaml
+
 # Diff two rule sets: changed rules + services to refactor
 bsl impact examples/checkout_v1.yaml examples/checkout_v2.yaml
+
+# Directory impact: pair files by name and roll up multi-service blast radius
+bsl impact old-rules/ new-rules/
 
 # Field-level rule diff for PR review
 bsl diff examples/checkout_v1.yaml examples/checkout_v2.yaml

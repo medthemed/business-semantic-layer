@@ -25,6 +25,16 @@ from .dsl import Rule, RuleSet, Condition, parse_document, dump_document
 from .schema import SchemaError, validate_ruleset
 from .impact import ChangeKind, ImpactResult, RuleChange, analyze_impact
 from .rule_diff import FieldDelta, diff_rule, format_rule_set_diff
+from .batch import (
+    BatchValidateResult,
+    FileImpact,
+    FileOutcome,
+    ImpactRollup,
+    discover_rule_files,
+    expand_rule_paths,
+    impact_rollup,
+    validate_many,
+)
 from .config import ProjectConfig, discover_config, load_config
 from .init import write_starter
 from .export import (
@@ -45,10 +55,18 @@ __all__ = [
     "RuleChange",
     "FieldDelta",
     "ProjectConfig",
+    "BatchValidateResult",
+    "FileImpact",
+    "FileOutcome",
+    "ImpactRollup",
     "parse_document",
     "dump_document",
     "validate_ruleset",
+    "validate_many",
     "analyze_impact",
+    "impact_rollup",
+    "discover_rule_files",
+    "expand_rule_paths",
     "diff_rule",
     "format_rule_set_diff",
     "discover_config",

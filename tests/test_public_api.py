@@ -24,10 +24,18 @@ EXPECTED_ALL = {
     "RuleChange",
     "FieldDelta",
     "ProjectConfig",
+    "BatchValidateResult",
+    "FileImpact",
+    "FileOutcome",
+    "ImpactRollup",
     "parse_document",
     "dump_document",
     "validate_ruleset",
+    "validate_many",
     "analyze_impact",
+    "impact_rollup",
+    "discover_rule_files",
+    "expand_rule_paths",
     "diff_rule",
     "format_rule_set_diff",
     "discover_config",
@@ -83,6 +91,30 @@ def test_export_helpers_present():
 def test_rule_diff_helpers_present():
     for name in ("diff_rule", "format_rule_set_diff"):
         assert callable(getattr(bsl, name)), name
+
+
+def test_batch_helpers_present():
+    for name in (
+        "discover_rule_files",
+        "expand_rule_paths",
+        "validate_many",
+        "impact_rollup",
+        "BatchValidateResult",
+        "ImpactRollup",
+        "FileOutcome",
+        "FileImpact",
+    ):
+        assert hasattr(bsl, name), name
+    for attr in ("ok", "passed", "failed", "format_table", "to_dict", "to_json"):
+        assert hasattr(bsl.BatchValidateResult, attr), attr
+    for attr in ("ok", "has_impact", "affected_services", "service_rollup", "format_summary"):
+        assert hasattr(bsl.ImpactRollup, attr), attr
+
+
+def test_validate_many_signature_frozen():
+    sig = inspect.signature(bsl.validate_many)
+    assert list(sig.parameters) == ["paths", "expand"]
+    assert sig.parameters["expand"].default is True
 
 
 def test_rule_model_fields_frozen():
