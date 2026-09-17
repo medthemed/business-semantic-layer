@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-19
+
+### Added
+- Published Draft 2020-12 JSON Schemas shipped with the package:
+  `rules-document`, `impact-report`, and `impact-rollup`.
+- Public exports: `load_schema`, `schema_path`, `KNOWN_SCHEMAS`,
+  `RULES_DOCUMENT`, `IMPACT_REPORT`, `IMPACT_ROLLUP`.
+- `ImpactResult.to_dict()` / `to_json()` machine-readable impact reports.
+- `bsl impact --format json` for single files (impact-report) and
+  directories (impact-rollup).
+- `docs/JSON_SCHEMA.md`: interop contract, stability rules, exit codes.
+
+### Changed
+- `bsl impact --format` now accepts `text`, `markdown`, and `json`.
+
 ## [0.4.0] - 2026-11-05
 
 ### Added
