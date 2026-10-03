@@ -19,6 +19,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
 
+from .errors import DslError
+
 
 # ---------------------------------------------------------------------------
 # Model
@@ -167,8 +169,12 @@ class RuleSet:
 # ---------------------------------------------------------------------------
 
 
-class YamlError(ValueError):
-    """Raised when the YAML subset parser hits something it cannot handle."""
+class YamlError(DslError):
+    """Raised when the YAML subset parser hits something it cannot handle.
+
+    Kept as a distinct name for backward compatibility; it is a
+    :class:`~business_semantic_layer.errors.DslError`.
+    """
 
 
 def _strip_comment(line: str) -> str:
@@ -488,5 +494,7 @@ def load_ruleset_document(text: str, *, fmt: str | None = None) -> RuleSet:
     """Parse text into a :class:`RuleSet` (no schema validation)."""
     data = parse_document(text, fmt=fmt)
     if not isinstance(data, Mapping):
-        raise TypeError(f"Rule document must be a mapping, got {type(data).__name__}")
+        raise DslError(
+            f"Rule document must be a mapping, got {type(data).__name__}"
+        )
     return RuleSet.from_dict(data)

@@ -15,6 +15,7 @@ from enum import Enum
 from typing import Iterable
 
 from .dsl import Rule, RuleSet
+from .errors import ImpactError
 
 
 class ChangeKind(str, Enum):
@@ -139,7 +140,23 @@ class ImpactResult:
 
 
 def analyze_impact(old: RuleSet, new: RuleSet) -> ImpactResult:
-    """Diff two rule sets and compute refactor impact."""
+    """Diff two rule sets and compute refactor impact.
+
+    Raises :class:`~business_semantic_layer.errors.ImpactError` if either
+    input is not a :class:`RuleSet` or contains duplicate rule ids.
+    """
+    for label, candidate in (("old", old), ("new", new)):
+        if not isinstance(candidate, RuleSet):
+            raise ImpactError(
+                f"{label} must be a RuleSet, got {type(candidate).__name__}"
+            )
+        ids = [r.id for r in candidate.rules]
+        if len(ids) != len(set(ids)):
+            dupes = sorted({i for i in ids if ids.count(i) > 1})
+            raise ImpactError(
+                f"{label} rule set {candidate.name!r} has duplicate rule ids: {dupes}"
+            )
+
     result = ImpactResult(old_name=old.name, new_name=new.name)
     old_map = old.by_id()
     new_map = new.by_id()

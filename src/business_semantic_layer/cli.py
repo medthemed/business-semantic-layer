@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Sequence
 
 from .dsl import RuleSet, dump_document, load_ruleset_document, parse_document
+from .errors import DslError, ImpactError
 from .export import (
     export_markdown_report,
     export_python_constants,
@@ -54,7 +55,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
         return 2
     try:
         data = parse_document(text)
-    except Exception as exc:  # noqa: BLE001 - surface parse errors cleanly
+    except DslError as exc:
         print(f"error: failed to parse {args.rules}: {exc}", file=sys.stderr)
         return 1
     errors = validate_raw(data)
@@ -76,14 +77,16 @@ def cmd_impact(args: argparse.Namespace) -> int:
     except SchemaError as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    except OSError as exc:
+    except (OSError, DslError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    except Exception as exc:  # noqa: BLE001
-        print(f"error: failed to load rule sets: {exc}", file=sys.stderr)
+
+    try:
+        impact = analyze_impact(old, new)
+    except ImpactError as exc:
+        print(f"error: impact analysis failed: {exc}", file=sys.stderr)
         return 2
 
-    impact = analyze_impact(old, new)
     if args.format == "markdown":
         output = export_markdown_report(impact, old=old, new=new)
     else:
@@ -106,14 +109,16 @@ def cmd_diff(args: argparse.Namespace) -> int:
     except SchemaError as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    except OSError as exc:
+    except (OSError, DslError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    except Exception as exc:  # noqa: BLE001
-        print(f"error: failed to load rule sets: {exc}", file=sys.stderr)
+
+    try:
+        impact = analyze_impact(old, new)
+    except ImpactError as exc:
+        print(f"error: impact analysis failed: {exc}", file=sys.stderr)
         return 2
 
-    impact = analyze_impact(old, new)
     output = format_rule_set_diff(
         old,
         new,
@@ -135,11 +140,8 @@ def cmd_export(args: argparse.Namespace) -> int:
     except SchemaError as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    except OSError as exc:
+    except (OSError, DslError) as exc:
         print(f"error: {exc}", file=sys.stderr)
-        return 2
-    except Exception as exc:  # noqa: BLE001
-        print(f"error: failed to load rule set: {exc}", file=sys.stderr)
         return 2
 
     if args.lang == "python":

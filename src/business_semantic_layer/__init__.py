@@ -12,8 +12,15 @@ impact   -- Diff two rule sets; list changed rules and affected services.
 rule_diff-- Human-readable field-level rule diffs for PR review.
 export   -- Markdown impact report + Python/TypeScript constant stubs.
 cli      -- `bsl validate | impact | diff | export`.
+
+Public API
+----------
+Everything re-exported here (see ``__all__``) is covered by the 0.x
+compatibility promise: names may be added, but existing names and their
+call signatures stay stable within the 0.x series.
 """
 
+from .errors import DslError, ImpactError
 from .dsl import Rule, RuleSet, Condition, parse_document, dump_document
 from .schema import SchemaError, validate_ruleset
 from .impact import ChangeKind, ImpactResult, RuleChange, analyze_impact
@@ -28,6 +35,8 @@ __all__ = [
     "Rule",
     "RuleSet",
     "Condition",
+    "DslError",
+    "ImpactError",
     "SchemaError",
     "ChangeKind",
     "ImpactResult",
