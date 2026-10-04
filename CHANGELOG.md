@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-04
+
+### Added
+- Typed exceptions: `DslError` for DSL parse / model problems, `ImpactError` for
+  impact-analysis failures. `YamlError` now subclasses `DslError`.
+- Public API freeze: `__all__` is the compatibility contract; `test_public_api.py`
+  pins `parse_document`, `analyze_impact`, `validate_ruleset`, and export signatures.
+- Integration tests that run the full `validate -> impact -> export` pipeline on
+  `examples/checkout_v1.yaml` and `examples/checkout_v2.yaml` through the public API.
+
+### Changed
+- `analyze_impact` validates its inputs and raises `ImpactError` on non-`RuleSet`
+  arguments or duplicate rule ids.
+- CLI catches `DslError` / `ImpactError` explicitly instead of bare `Exception`.
+
+### Docs
+- `docs/PUBLIC_API.md`: frozen entry points, exception taxonomy, CLI exit codes.
+
 ## [0.1.1] - 2026-09-17
 
 ### Added
