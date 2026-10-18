@@ -2,11 +2,15 @@
 
 Subcommands
 -----------
+bsl init [DIR] [--force]
+    Scaffold a starter ``rules.yaml`` and ``.bsl.yaml`` project config.
+
 bsl validate RULES.yaml
     Parse + schema-validate a rule document. Exit 0 on success, 1 on errors.
 
 bsl impact OLD.yaml NEW.yaml [--format text|markdown] [-o OUT]
     Diff two rule sets; print changed rules and services to refactor.
+    ``-o`` falls back to the project config ``output_path`` when omitted.
 
 bsl diff OLD.yaml NEW.yaml [--show-unchanged] [-o OUT]
     Human-readable field-level rule diff for PR review.
@@ -22,6 +26,7 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
+from .config import discover_config
 from .dsl import RuleSet, dump_document, load_ruleset_document, parse_document
 from .errors import DslError, ImpactError
 from .export import (
@@ -30,6 +35,7 @@ from .export import (
     export_typescript_constants,
 )
 from .impact import analyze_impact
+from .init import write_starter
 from .rule_diff import format_rule_set_diff
 from .schema import SchemaError, validate_raw
 
@@ -45,6 +51,31 @@ def _load_validated(path: str | Path) -> RuleSet:
     if not errors.ok:
         raise errors
     return RuleSet.from_dict(data)
+
+
+def _resolve_output(args: argparse.Namespace) -> str | None:
+    """CLI ``-o`` wins; otherwise fall back to the project config."""
+    explicit = getattr(args, "output", None)
+    if explicit:
+        return explicit
+    cfg = discover_config()
+    return cfg.output_path
+
+
+def _write_output(path_str: str, content: str, *, default_name: str) -> None:
+    """Write ``content`` to ``path_str``.
+
+    If ``path_str`` is an existing directory or has no file suffix, treat
+    it as a directory and write ``default_name`` inside it.
+    """
+    path = Path(path_str)
+    if path.is_dir() or not path.suffix:
+        path.mkdir(parents=True, exist_ok=True)
+        path = path / default_name
+    else:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    print(f"wrote {path}")
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
@@ -92,9 +123,9 @@ def cmd_impact(args: argparse.Namespace) -> int:
     else:
         output = impact.format_summary() + "\n"
 
-    if args.output:
-        Path(args.output).write_text(output, encoding="utf-8")
-        print(f"wrote {args.output}")
+    target = _resolve_output(args)
+    if target:
+        _write_output(target, output, default_name="impact.md")
     else:
         print(output, end="" if output.endswith("\n") else "\n")
 
@@ -126,9 +157,9 @@ def cmd_diff(args: argparse.Namespace) -> int:
         show_unchanged=args.show_unchanged,
     )
 
-    if args.output:
-        Path(args.output).write_text(output, encoding="utf-8")
-        print(f"wrote {args.output}")
+    target = _resolve_output(args)
+    if target:
+        _write_output(target, output, default_name="rule-diff.txt")
     else:
         print(output, end="" if output.endswith("\n") else "\n")
     return 0
@@ -168,11 +199,35 @@ def cmd_export(args: argparse.Namespace) -> int:
         print(f"error: unknown --lang {args.lang!r}", file=sys.stderr)
         return 2
 
-    if args.output:
-        Path(args.output).write_text(output, encoding="utf-8")
-        print(f"wrote {args.output}")
+    target = _resolve_output(args)
+    if target:
+        ext = {
+            "python": "py",
+            "typescript": "ts",
+            "ts": "ts",
+            "markdown": "md",
+            "json": "json",
+            "yaml": "yaml",
+        }.get(args.lang, "txt")
+        _write_output(target, output, default_name=f"rules.{ext}")
     else:
         print(output, end="" if output.endswith("\n") else "\n")
+    return 0
+
+
+def cmd_init(args: argparse.Namespace) -> int:
+    directory = args.directory or "."
+    try:
+        written = write_starter(directory, force=args.force)
+    except FileExistsError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print(f"error: cannot write starter files: {exc}", file=sys.stderr)
+        return 2
+    for path in written:
+        print(f"wrote {path}")
+    print("Next: bsl validate rules.yaml")
     return 0
 
 
@@ -185,6 +240,23 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p_init = sub.add_parser(
+        "init",
+        help="scaffold a starter rules.yaml and .bsl.yaml project config",
+    )
+    p_init.add_argument(
+        "directory",
+        nargs="?",
+        default=".",
+        help="target directory (default: current directory)",
+    )
+    p_init.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite existing starter files",
+    )
+    p_init.set_defaults(func=cmd_init)
 
     p_val = sub.add_parser("validate", help="validate a rule document")
     p_val.add_argument("rules", help="path to rules YAML/JSON")

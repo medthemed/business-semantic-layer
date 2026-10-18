@@ -25,6 +25,8 @@ from .dsl import Rule, RuleSet, Condition, parse_document, dump_document
 from .schema import SchemaError, validate_ruleset
 from .impact import ChangeKind, ImpactResult, RuleChange, analyze_impact
 from .rule_diff import FieldDelta, diff_rule, format_rule_set_diff
+from .config import ProjectConfig, discover_config, load_config
+from .init import write_starter
 from .export import (
     export_markdown_report,
     export_python_constants,
@@ -42,12 +44,16 @@ __all__ = [
     "ImpactResult",
     "RuleChange",
     "FieldDelta",
+    "ProjectConfig",
     "parse_document",
     "dump_document",
     "validate_ruleset",
     "analyze_impact",
     "diff_rule",
     "format_rule_set_diff",
+    "discover_config",
+    "load_config",
+    "write_starter",
     "export_markdown_report",
     "export_python_constants",
     "export_typescript_constants",
