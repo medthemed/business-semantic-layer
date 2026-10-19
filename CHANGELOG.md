@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-19
+
+### Added
+- Project config: `.bsl.yaml` / `.bsl.json` sets `default_services` and `output_path`.
+  Lookup order: CLI flag > `.bsl.yaml` > `.bsl.json` > built-in defaults.
+- `bsl init [DIR]` scaffolds a starter `rules.yaml` (two checkout rules) and `.bsl.yaml`
+  so the first `bsl validate` works immediately.
+- New public exports: `ProjectConfig`, `load_config`, `discover_config`, `write_starter`.
+
+### Changed
+- `bsl impact` / `bsl diff` / `bsl export` fall back to the config `output_path`
+  when `-o` is omitted; explicit `-o` still wins.
+- When `output_path` is a directory, reports land inside it with a default filename.
+
 ## [0.2.0] - 2026-10-04
 
 ### Added
